@@ -1,30 +1,75 @@
-import { Plane } from "lucide-react"
+import { Plane } from "lucide-react";
 
 interface FlightResultsPanelProps {
-  activeFlight: string | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  flight: any;
+  error: string;
 }
 
-export function FlightResultsPanel({ activeFlight }: FlightResultsPanelProps) {
+export function FlightResultsPanel({
+  flight,
+  error,
+}: FlightResultsPanelProps) {
+  if (error) {
+    return (
+      <main className="p-8">
+        <h2 className="text-red-500 font-bold">{error}</h2>
+      </main>
+    );
+  }
+
+  if (!flight) {
+    return (
+      <main className="p-8 flex items-center justify-center">
+        <div className="text-center">
+          <Plane className="mx-auto mb-4 h-10 w-10" />
+          <h2 className="text-xl font-bold">
+            Search for a Flight
+          </h2>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="p-8 flex items-center justify-center bg-background">
-      {activeFlight ? (
-        <div className="text-center max-w-md animate-in fade-in duration-300">
-          <h2 className="text-2xl font-bold tracking-tight">Tracking Flight {activeFlight}</h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            Connecting to live radar feed... Flight data dashboard rendering here.
-          </p>
-        </div>
-      ) : (
-        <div className="text-center max-w-md">
-          <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-4">
-            <Plane className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h2 className="text-lg font-semibold tracking-tight">No Active Flight Selected</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Enter a valid flight number in the left panel to display radar routing and schedules.
-          </p>
-        </div>
-      )}
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">
+        {flight.flight_iata}
+      </h1>
+
+      <div className="space-y-2">
+        <p>
+          <strong>Airline:</strong> {flight.airline_name}
+        </p>
+
+        <p>
+          <strong>Status:</strong> {flight.status}
+        </p>
+
+        <p>
+          <strong>Departure:</strong> {flight.dep_iata}
+        </p>
+
+        <p>
+          <strong>Arrival:</strong> {flight.arr_iata}
+        </p>
+
+        <p>
+          <strong>Latitude:</strong> {flight.lat}
+        </p>
+
+        <p>
+          <strong>Longitude:</strong> {flight.lng}
+        </p>
+
+        <p>
+          <strong>Altitude:</strong> {flight.alt}
+        </p>
+
+        <p>
+          <strong>Speed:</strong> {flight.speed}
+        </p>
+      </div>
     </main>
-  )
+  );
 }
