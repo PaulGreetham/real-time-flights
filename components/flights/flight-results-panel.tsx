@@ -13,7 +13,7 @@ export function FlightResultsPanel({
   if (error) {
     return (
       <main className="p-8">
-        <h2 className="text-red-500 font-bold">{error}</h2>
+        <h3 className="text-red-500 font-bold">{error}</h3>
       </main>
     );
   }
