@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 
 const AIRLABS_BASE = "https://airlabs.co/api/v9/flights";
 const AIRLABS_AIRPORTS = "https://airlabs.co/api/v9/airports";
+const AIRPORT_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 type FlightParam = "flight_iata" | "flight_icao";
 type Coordinates = { lat: number; lng: number };
+type AirportCacheEntry = { coordinates: Coordinates; expiresAt: number };
+
+const airportCoordinatesCache = new Map<string, AirportCacheEntry>();
+const airportCoordinatesInFlight = new Map<string, Promise<Coordinates | null>>();
 
 async function queryAirlabs(
   apiKey: string,
@@ -57,19 +62,50 @@ async function queryAirportCoordinates(
   apiKey: string,
   airportIata: string
 ): Promise<Coordinates | null> {
-  const url = `${AIRLABS_AIRPORTS}?api_key=${apiKey}&iata_code=${airportIata}`;
-  const res = await fetch(url);
+  const normalizedIata = airportIata.toUpperCase();
+  const now = Date.now();
+  const cached = airportCoordinatesCache.get(normalizedIata);
 
-  if (!res.ok) {
-    return null;
+  if (cached && cached.expiresAt > now) {
+    return cached.coordinates;
   }
 
-  const data = (await res.json()) as { response?: unknown[]; error?: unknown };
-  if (data.error || !Array.isArray(data.response) || data.response.length === 0) {
-    return null;
+  const pending = airportCoordinatesInFlight.get(normalizedIata);
+  if (pending) {
+    return pending;
   }
 
-  return toCoordinates(data.response[0]);
+  const requestPromise = (async () => {
+    const url = `${AIRLABS_AIRPORTS}?api_key=${apiKey}&iata_code=${normalizedIata}`;
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = (await res.json()) as { response?: unknown[]; error?: unknown };
+    if (data.error || !Array.isArray(data.response) || data.response.length === 0) {
+      return null;
+    }
+
+    const coordinates = toCoordinates(data.response[0]);
+    if (coordinates) {
+      airportCoordinatesCache.set(normalizedIata, {
+        coordinates,
+        expiresAt: now + AIRPORT_CACHE_TTL_MS,
+      });
+    }
+
+    return coordinates;
+  })();
+
+  airportCoordinatesInFlight.set(normalizedIata, requestPromise);
+
+  try {
+    return await requestPromise;
+  } finally {
+    airportCoordinatesInFlight.delete(normalizedIata);
+  }
 }
 
 export async function GET(request: Request) {

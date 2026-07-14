@@ -45,7 +45,11 @@ export default function Home() {
       return;
     }
 
-    const interval = setInterval(async () => {
+    const refreshLiveFlight = async () => {
+      if (document.hidden) {
+        return;
+      }
+
       try {
         const latestFlight = await fetchFlight(activeFlightNumber);
         setFlightData(latestFlight);
@@ -53,9 +57,24 @@ export default function Home() {
       } catch (err) {
         console.error("Live update failed:", err);
       }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        void refreshLiveFlight();
+      }
+    };
+
+    const interval = setInterval(() => {
+      void refreshLiveFlight();
     }, 60_000);
 
-    return () => clearInterval(interval);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [activeFlightNumber]);
 
   return (
