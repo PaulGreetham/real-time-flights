@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 const AIRLABS_BASE = "https://airlabs.co/api/v9/flights";
+const AIRLABS_AIRPORTS = "https://airlabs.co/api/v9/airports";
 
 type FlightParam = "flight_iata" | "flight_icao";
+type Coordinates = { lat: number; lng: number };
 
 async function queryAirlabs(
   apiKey: string,
@@ -28,6 +30,46 @@ async function queryAirlabs(
   }
 
   return data.response as unknown[];
+}
+
+function toCoordinates(value: unknown): Coordinates | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const lat = candidate.lat;
+  const lng = candidate.lng;
+
+  if (
+    typeof lat === "number" &&
+    Number.isFinite(lat) &&
+    typeof lng === "number" &&
+    Number.isFinite(lng)
+  ) {
+    return { lat, lng };
+  }
+
+  return null;
+}
+
+async function queryAirportCoordinates(
+  apiKey: string,
+  airportIata: string
+): Promise<Coordinates | null> {
+  const url = `${AIRLABS_AIRPORTS}?api_key=${apiKey}&iata_code=${airportIata}`;
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const data = (await res.json()) as { response?: unknown[]; error?: unknown };
+  if (data.error || !Array.isArray(data.response) || data.response.length === 0) {
+    return null;
+  }
+
+  return toCoordinates(data.response[0]);
 }
 
 export async function GET(request: Request) {
@@ -79,7 +121,30 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(response[0]);
+    const flight = response[0] as Record<string, unknown>;
+    const depIata =
+      typeof flight.dep_iata === "string" ? flight.dep_iata : undefined;
+    const arrIata =
+      typeof flight.arr_iata === "string" ? flight.arr_iata : undefined;
+
+    const [originCoords, destinationCoords] = await Promise.all([
+      depIata ? queryAirportCoordinates(apiKey, depIata) : Promise.resolve(null),
+      arrIata ? queryAirportCoordinates(apiKey, arrIata) : Promise.resolve(null),
+    ]);
+
+    return NextResponse.json({
+      ...flight,
+      route: {
+        origin:
+          depIata && originCoords
+            ? { iata: depIata, ...originCoords }
+            : undefined,
+        destination:
+          arrIata && destinationCoords
+            ? { iata: arrIata, ...destinationCoords }
+            : undefined,
+      },
+    });
   } catch (err) {
     console.error("Failed to fetch AirLabs:", err);
 
