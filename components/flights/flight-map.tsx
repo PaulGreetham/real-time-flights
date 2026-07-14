@@ -190,11 +190,13 @@ export function FlightMap({
   return (
     <div className="overflow-hidden rounded-xl border">
       <Map
-        key={`${flightCode}-${liveLat}-${liveLng}-${origin?.iata ?? "no-origin"}-${destination?.iata ?? "no-destination"}`}
+        key={`${flightCode}-${markerPoint.lat.toFixed(4)}-${markerPoint.lng.toFixed(4)}-${origin?.iata ?? "no-origin"}-${destination?.iata ?? "no-destination"}`}
         mapboxAccessToken={mapboxToken}
-        latitude={markerPoint.lat}
-        longitude={markerPoint.lng}
-        zoom={5}
+        initialViewState={{
+          latitude: markerPoint.lat,
+          longitude: markerPoint.lng,
+          zoom: 5,
+        }}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         style={{ width: "100%", height: 360 }}
       >
