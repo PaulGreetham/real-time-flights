@@ -1,6 +1,16 @@
 import { Plane } from "lucide-react";
 import type { FlightData } from "@/lib/types/flight";
 import { FlightMap } from "@/components/flights/flight-map";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface FlightResultsPanelProps {
   flight: FlightData | null;
@@ -24,7 +34,10 @@ export function FlightResultsPanel({
   if (error) {
     return (
       <main className="p-8">
-        <h2 className="text-red-500 font-bold">{error}</h2>
+        <Alert variant="destructive" className="max-w-2xl">
+          <AlertTitle>Unable to load flight</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       </main>
     );
   }
@@ -32,21 +45,36 @@ export function FlightResultsPanel({
   if (!flight) {
     return (
       <main className="p-8 flex items-center justify-center">
-        <div className="text-center">
-          <Plane className="mx-auto mb-4 h-10 w-10" />
-          <h2 className="text-xl font-bold">
-            Search for a Flight
-          </h2>
-        </div>
+        <Card className="w-full max-w-xl text-center">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+              <Plane className="h-6 w-6" />
+              Search for a Flight
+            </CardTitle>
+            <CardDescription>
+              Enter a flight number in the sidebar to view live data and routing.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </main>
     );
   }
 
   return (
     <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">
-        {flight.flight_iata ?? flight.flight_icao ?? "Unknown Flight"}
-      </h1>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-3xl">
+            {flight.flight_iata ?? flight.flight_icao ?? "Unknown Flight"}
+          </CardTitle>
+          <CardDescription className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">
+              {flight.airline_iata ?? flight.airline_icao ?? "Unknown Airline"}
+            </Badge>
+            <Badge>{flight.status}</Badge>
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       {hasCoordinates ? (
         <div className="mb-6">
@@ -65,45 +93,33 @@ export function FlightResultsPanel({
           />
         </div>
       ) : (
-        <p className="mb-6 text-sm text-muted-foreground">
-          Live map unavailable for this result (missing coordinates).
-        </p>
+        <Alert className="mb-6">
+          <AlertTitle>Map unavailable</AlertTitle>
+          <AlertDescription>
+            Live map is unavailable for this result because coordinates are missing.
+          </AlertDescription>
+        </Alert>
       )}
 
-      <div className="space-y-2">
-        <p>
-          <strong>Airline:</strong>{" "}
-          {flight.airline_iata ?? flight.airline_icao ?? "Unknown"}
-        </p>
-
-        <p>
-          <strong>Status:</strong> {flight.status}
-        </p>
-
-        <p>
-          <strong>Departure:</strong> {flight.dep_iata}
-        </p>
-
-        <p>
-          <strong>Arrival:</strong> {flight.arr_iata}
-        </p>
-
-        <p>
-          <strong>Latitude:</strong> {flight.lat}
-        </p>
-
-        <p>
-          <strong>Longitude:</strong> {flight.lng}
-        </p>
-
-        <p>
-          <strong>Altitude:</strong> {flight.alt}
-        </p>
-
-        <p>
-          <strong>Speed:</strong> {flight.speed}
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Flight Details</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2">
+          <p><strong>Departure:</strong> {flight.dep_iata}</p>
+          <p><strong>Arrival:</strong> {flight.arr_iata}</p>
+          <p><strong>Latitude:</strong> {flight.lat}</p>
+          <p><strong>Longitude:</strong> {flight.lng}</p>
+          <p><strong>Altitude:</strong> {flight.alt}</p>
+          <p><strong>Speed:</strong> {flight.speed}</p>
+        </CardContent>
+        <Separator />
+        <CardContent className="pt-4">
+          <p className="text-sm text-muted-foreground">
+            Live position updates every 60 seconds when the tab is visible.
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }

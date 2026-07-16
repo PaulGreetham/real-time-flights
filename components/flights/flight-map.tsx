@@ -10,6 +10,8 @@ import Map, {
 } from "react-map-gl/mapbox";
 import { Plane } from "lucide-react";
 import type { FlightRoutePoint } from "@/lib/types/flight";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 interface FlightMapProps {
   liveLat: number;
@@ -167,9 +169,12 @@ export function FlightMap({
 
   if (!mapboxToken) {
     return (
-      <div className="rounded-xl border bg-muted/20 p-4 text-sm text-muted-foreground">
-        Map unavailable: missing NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN.
-      </div>
+      <Alert>
+        <AlertTitle>Map unavailable</AlertTitle>
+        <AlertDescription>
+          Missing NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN.
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -188,61 +193,63 @@ export function FlightMap({
     : null;
 
   return (
-    <div className="overflow-hidden rounded-xl border">
-      <Map
-        key={`${flightCode}-${markerPoint.lat.toFixed(4)}-${markerPoint.lng.toFixed(4)}-${origin?.iata ?? "no-origin"}-${destination?.iata ?? "no-destination"}`}
-        mapboxAccessToken={mapboxToken}
-        initialViewState={{
-          latitude: markerPoint.lat,
-          longitude: markerPoint.lng,
-          zoom: 5,
-        }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
-        style={{ width: "100%", height: 360 }}
-      >
-        <NavigationControl position="top-right" />
-        {routeGeojson ? (
-          <Source id="flight-route" {...routeGeojson}>
-            <Layer
-              id="flight-route-line"
-              type="line"
-              paint={{
-                "line-color": "#2563eb",
-                "line-width": 3,
-                "line-opacity": 0.8,
-              }}
+    <Card className="overflow-hidden py-0">
+      <CardContent className="p-0">
+        <Map
+          key={`${flightCode}-${markerPoint.lat.toFixed(4)}-${markerPoint.lng.toFixed(4)}-${origin?.iata ?? "no-origin"}-${destination?.iata ?? "no-destination"}`}
+          mapboxAccessToken={mapboxToken}
+          initialViewState={{
+            latitude: markerPoint.lat,
+            longitude: markerPoint.lng,
+            zoom: 5,
+          }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          style={{ width: "100%", height: 360 }}
+        >
+          <NavigationControl position="top-right" />
+          {routeGeojson ? (
+            <Source id="flight-route" {...routeGeojson}>
+              <Layer
+                id="flight-route-line"
+                type="line"
+                paint={{
+                  "line-color": "#2563eb",
+                  "line-width": 3,
+                  "line-opacity": 0.8,
+                }}
+              />
+            </Source>
+          ) : null}
+
+          {origin ? (
+            <Marker longitude={origin.lng} latitude={origin.lat} anchor="center">
+              <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />
+            </Marker>
+          ) : null}
+
+          {destination ? (
+            <Marker
+              longitude={destination.lng}
+              latitude={destination.lat}
+              anchor="center"
+            >
+              <div className="h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white" />
+            </Marker>
+          ) : null}
+
+          <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
+            <Plane
+              className="h-6 w-6 text-primary drop-shadow"
+              style={{ transform: `rotate(${iconRotation}deg)` }}
             />
-          </Source>
-        ) : null}
-
-        {origin ? (
-          <Marker longitude={origin.lng} latitude={origin.lat} anchor="center">
-            <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />
           </Marker>
-        ) : null}
-
-        {destination ? (
-          <Marker
-            longitude={destination.lng}
-            latitude={destination.lat}
-            anchor="center"
-          >
-            <div className="h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white" />
-          </Marker>
-        ) : null}
-
-        <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
-          <Plane
-            className="h-6 w-6 text-primary drop-shadow"
-            style={{ transform: `rotate(${iconRotation}deg)` }}
-          />
-        </Marker>
-      </Map>
-      <p className="border-t bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+        </Map>
+      </CardContent>
+      <CardFooter className="border-t bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
         {hasRoute && origin && destination
           ? `Route ${origin.iata} -> ${destination.iata}. Live position refreshes every 60s.`
           : `Tracking ${flightCode} at ${liveLat.toFixed(4)}, ${liveLng.toFixed(4)}`}
-      </p>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }
