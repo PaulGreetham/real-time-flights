@@ -27,7 +27,7 @@ export function FlightSearchSidebar({ onSearch }: FlightSearchSidebarProps) {
   }
 
   return (
-    <aside className="border-r bg-muted/30 p-6">
+    <aside className="border-r bg-muted/30 p-6 md:p-8">
       <Card className="border-border/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">

@@ -193,7 +193,7 @@ export function FlightMap({
     : null;
 
   return (
-    <Card className="overflow-hidden py-0">
+    <Card className="overflow-hidden gap-0 py-0">
       <CardContent className="p-0">
         <Map
           key={`${flightCode}-${markerPoint.lat.toFixed(4)}-${markerPoint.lng.toFixed(4)}-${origin?.iata ?? "no-origin"}-${destination?.iata ?? "no-destination"}`}
@@ -245,7 +245,7 @@ export function FlightMap({
           </Marker>
         </Map>
       </CardContent>
-      <CardFooter className="border-t bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+      <CardFooter className="border-t bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
         {hasRoute && origin && destination
           ? `Route ${origin.iata} -> ${destination.iata}. Live position refreshes every 60s.`
           : `Tracking ${flightCode} at ${liveLat.toFixed(4)}, ${liveLng.toFixed(4)}`}
