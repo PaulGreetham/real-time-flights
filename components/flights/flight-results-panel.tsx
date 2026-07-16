@@ -5,13 +5,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 interface FlightResultsPanelProps {
   flight: FlightData | null;
@@ -102,43 +99,32 @@ export function FlightResultsPanel({
         </Alert>
       )}
 
-      <Card className="gap-0">
-        <CardHeader>
-          <CardTitle>Flight Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 pt-0 pb-6 sm:grid-cols-2">
-          <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Departure</p>
-            <p className="text-base font-semibold">{flight.dep_iata}</p>
-          </div>
-          <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Arrival</p>
-            <p className="text-base font-semibold">{flight.arr_iata}</p>
-          </div>
-          <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Latitude</p>
-            <p className="text-base font-semibold tabular-nums">{flight.lat}</p>
-          </div>
-          <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Longitude</p>
-            <p className="text-base font-semibold tabular-nums">{flight.lng}</p>
-          </div>
-          <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Altitude</p>
-            <p className="text-base font-semibold tabular-nums">{flight.alt}</p>
-          </div>
-          <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Speed</p>
-            <p className="text-base font-semibold tabular-nums">{flight.speed}</p>
-          </div>
-        </CardContent>
-        <Separator />
-        <CardFooter className="bg-muted/20 px-6 py-4">
-          <p className="text-sm text-muted-foreground">
-            Live position updates every 60 seconds when the tab is visible.
-          </p>
-        </CardFooter>
-      </Card>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Departure</p>
+          <p className="text-base font-semibold">{flight.dep_iata}</p>
+        </div>
+        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Arrival</p>
+          <p className="text-base font-semibold">{flight.arr_iata}</p>
+        </div>
+        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Latitude</p>
+          <p className="text-base font-semibold tabular-nums">{flight.lat}</p>
+        </div>
+        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Longitude</p>
+          <p className="text-base font-semibold tabular-nums">{flight.lng}</p>
+        </div>
+        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Altitude</p>
+          <p className="text-base font-semibold tabular-nums">{flight.alt}</p>
+        </div>
+        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Speed</p>
+          <p className="text-base font-semibold tabular-nums">{flight.speed}</p>
+        </div>
+      </div>
     </main>
   );
 }
