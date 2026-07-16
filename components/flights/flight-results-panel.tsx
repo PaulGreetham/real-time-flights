@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -33,7 +34,7 @@ export function FlightResultsPanel({
 
   if (error) {
     return (
-      <main className="p-8">
+      <main className="p-6 md:p-8">
         <Alert variant="destructive" className="max-w-2xl">
           <AlertTitle>Unable to load flight</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -44,7 +45,7 @@ export function FlightResultsPanel({
 
   if (!flight) {
     return (
-      <main className="p-8 flex items-center justify-center">
+      <main className="flex items-center justify-center p-6 md:p-8">
         <Card className="w-full max-w-xl text-center">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2 text-2xl">
@@ -61,8 +62,8 @@ export function FlightResultsPanel({
   }
 
   return (
-    <main className="p-8">
-      <Card className="mb-6">
+    <main className="space-y-6 p-6 md:p-8">
+      <Card>
         <CardHeader>
           <CardTitle className="text-3xl">
             {flight.flight_iata ?? flight.flight_icao ?? "Unknown Flight"}
@@ -77,7 +78,7 @@ export function FlightResultsPanel({
       </Card>
 
       {hasCoordinates ? (
-        <div className="mb-6">
+        <div>
           <FlightMap
             key={`${flight.flight_iata ?? flight.flight_icao ?? "flight"}-${mapLat}-${mapLng}-${flight.route?.origin?.iata ?? "no-origin"}-${flight.route?.destination?.iata ?? "no-destination"}`}
             liveLat={mapLat}
@@ -93,7 +94,7 @@ export function FlightResultsPanel({
           />
         </div>
       ) : (
-        <Alert className="mb-6">
+        <Alert>
           <AlertTitle>Map unavailable</AlertTitle>
           <AlertDescription>
             Live map is unavailable for this result because coordinates are missing.
@@ -101,11 +102,11 @@ export function FlightResultsPanel({
         </Alert>
       )}
 
-      <Card>
+      <Card className="gap-0">
         <CardHeader>
           <CardTitle>Flight Details</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2">
+        <CardContent className="grid gap-3 pt-0 pb-6 sm:grid-cols-2">
           <p><strong>Departure:</strong> {flight.dep_iata}</p>
           <p><strong>Arrival:</strong> {flight.arr_iata}</p>
           <p><strong>Latitude:</strong> {flight.lat}</p>
@@ -114,11 +115,11 @@ export function FlightResultsPanel({
           <p><strong>Speed:</strong> {flight.speed}</p>
         </CardContent>
         <Separator />
-        <CardContent className="pt-4">
+        <CardFooter className="bg-muted/20 px-6 py-4">
           <p className="text-sm text-muted-foreground">
             Live position updates every 60 seconds when the tab is visible.
           </p>
-        </CardContent>
+        </CardFooter>
       </Card>
     </main>
   );
