@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Real-Time Flights
 
-## Getting Started
+Real-Time Flights is a flight-tracking web app focused on a single job: search for a flight and immediately understand where that aircraft is, where it is headed, and how it is moving right now.
 
-First, run the development server:
+The experience combines live telemetry, route context, and map visualization in one screen so users can move from "is this flight active?" to "where is it relative to its route?" without switching tools.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What the app does
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Searches for active flights by:
+  - Flight number (IATA or ICAO format).
+  - Dropdown-based selectors for airline and flight lookup.
+- Returns current flight telemetry including status, latitude/longitude, heading, altitude, and speed.
+- Enriches flights with origin and destination airport coordinates to provide route context.
+- Renders a live map view with:
+  - A plane marker rotated by current heading.
+  - Route line from origin to destination with the current position integrated into the path.
+  - Origin/destination markers for clear directional context.
+- Auto-refreshes flight data every 60 seconds while the tab is visible.
+- Handles API and configuration failure states with clear user-facing feedback.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data flow at a glance
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. The user submits flight search criteria from the sidebar (flight number or dropdown selections such as airline).
+2. The app calls a server route (`/api/flight`) rather than exposing external API keys in the client.
+3. The server queries AirLabs flight data, with automatic fallback between IATA and ICAO parameters.
+4. The server augments the flight with airport coordinates (cached in-memory with a 7-day TTL).
+5. The client renders details and map state from the normalized response.
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
+### Framework and language
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 16 (App Router, server route handlers)
+- React 19
+- TypeScript 5
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Mapping and geospatial UI
 
-## Deploy on Vercel
+- Mapbox GL + `react-map-gl`
+- Custom route smoothing and point-to-polyline snapping for cleaner live map presentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Data source
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [AirLabs Flights API](https://airlabs.co/) for live flight telemetry
+- [AirLabs Airports API](https://airlabs.co/) for origin/destination coordinate enrichment
+
+### Styling and UI system
+
+- Tailwind CSS 4
+- shadcn/ui component patterns
+- `lucide-react` icons
+- Utility helpers: `clsx`, `tailwind-merge`, `class-variance-authority`
+
+### Operational characteristics
+
+- Server-side API key usage for external calls
+- In-memory airport coordinate cache and in-flight request deduplication
+- Client polling strategy optimized to refresh only when the tab is visible
