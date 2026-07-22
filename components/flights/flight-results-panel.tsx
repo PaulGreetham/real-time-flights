@@ -1,4 +1,3 @@
-import { Plane } from "lucide-react";
 import type { FlightData } from "@/lib/types/flight";
 import { FlightMap } from "@/components/flights/flight-map";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -45,10 +44,7 @@ export function FlightResultsPanel({
       <main className="flex items-center justify-center p-6 md:p-8">
         <Card className="w-full max-w-xl text-center">
           <CardHeader>
-            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-              <Plane className="h-6 w-6" />
-              Search for a Flight
-            </CardTitle>
+            <CardTitle className="text-2xl">Search for a Flight</CardTitle>
             <CardDescription>
               Enter a flight number in the sidebar to view live data and routing.
             </CardDescription>
