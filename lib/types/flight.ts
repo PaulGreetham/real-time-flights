@@ -1,5 +1,8 @@
 export interface FlightRoutePoint {
   iata: string;
+  name?: string;
+  city?: string;
+  countryCode?: string;
   lat: number;
   lng: number;
 }
@@ -17,6 +20,8 @@ export interface FlightData {
   status?: string | null;
   dep_iata?: string | null;
   arr_iata?: string | null;
+  dep_name?: string | null;
+  arr_name?: string | null;
   lat?: number | null;
   lng?: number | null;
   dir?: number | null;

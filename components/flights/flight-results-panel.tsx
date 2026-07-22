@@ -54,6 +54,14 @@ export function FlightResultsPanel({
     );
   }
 
+  const departureName =
+    flight.dep_name ?? flight.route?.origin?.name ?? flight.route?.origin?.city ?? null;
+  const arrivalName =
+    flight.arr_name ??
+    flight.route?.destination?.name ??
+    flight.route?.destination?.city ??
+    null;
+
   return (
     <main className="space-y-6 p-6 md:p-8">
       <Card>
@@ -98,11 +106,17 @@ export function FlightResultsPanel({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Departure</p>
-          <p className="text-base font-semibold">{flight.dep_iata}</p>
+          <p className="text-base font-semibold">{flight.dep_iata ?? "Unknown"}</p>
+          {departureName ? (
+            <p className="text-sm text-muted-foreground">{departureName}</p>
+          ) : null}
         </div>
         <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Arrival</p>
-          <p className="text-base font-semibold">{flight.arr_iata}</p>
+          <p className="text-base font-semibold">{flight.arr_iata ?? "Unknown"}</p>
+          {arrivalName ? (
+            <p className="text-sm text-muted-foreground">{arrivalName}</p>
+          ) : null}
         </div>
         <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Latitude</p>
