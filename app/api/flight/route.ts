@@ -6,10 +6,17 @@ const AIRPORT_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 type FlightParam = "flight_iata" | "flight_icao";
 type Coordinates = { lat: number; lng: number };
-type AirportCacheEntry = { coordinates: Coordinates; expiresAt: number };
+type AirportDetails = {
+  iata: string;
+  name?: string;
+  city?: string;
+  countryCode?: string;
+  coordinates: Coordinates | null;
+};
+type AirportCacheEntry = { airport: AirportDetails; expiresAt: number };
 
 const airportCoordinatesCache = new Map<string, AirportCacheEntry>();
-const airportCoordinatesInFlight = new Map<string, Promise<Coordinates | null>>();
+const airportCoordinatesInFlight = new Map<string, Promise<AirportDetails | null>>();
 
 async function queryAirlabs(
   apiKey: string,
@@ -43,8 +50,18 @@ function toCoordinates(value: unknown): Coordinates | null {
   }
 
   const candidate = value as Record<string, unknown>;
-  const lat = candidate.lat;
-  const lng = candidate.lng;
+  const lat =
+    typeof candidate.lat === "number"
+      ? candidate.lat
+      : typeof candidate.lat === "string"
+        ? Number(candidate.lat)
+        : null;
+  const lng =
+    typeof candidate.lng === "number"
+      ? candidate.lng
+      : typeof candidate.lng === "string"
+        ? Number(candidate.lng)
+        : null;
 
   if (
     typeof lat === "number" &&
@@ -58,16 +75,20 @@ function toCoordinates(value: unknown): Coordinates | null {
   return null;
 }
 
-async function queryAirportCoordinates(
+function toOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+async function queryAirportDetails(
   apiKey: string,
   airportIata: string
-): Promise<Coordinates | null> {
+): Promise<AirportDetails | null> {
   const normalizedIata = airportIata.toUpperCase();
   const now = Date.now();
   const cached = airportCoordinatesCache.get(normalizedIata);
 
   if (cached && cached.expiresAt > now) {
-    return cached.coordinates;
+    return cached.airport;
   }
 
   const pending = airportCoordinatesInFlight.get(normalizedIata);
@@ -88,15 +109,21 @@ async function queryAirportCoordinates(
       return null;
     }
 
-    const coordinates = toCoordinates(data.response[0]);
-    if (coordinates) {
-      airportCoordinatesCache.set(normalizedIata, {
-        coordinates,
-        expiresAt: now + AIRPORT_CACHE_TTL_MS,
-      });
-    }
+    const airportResponse = data.response[0] as Record<string, unknown>;
+    const airport: AirportDetails = {
+      iata: normalizedIata,
+      name: toOptionalString(airportResponse.name),
+      city: toOptionalString(airportResponse.city),
+      countryCode: toOptionalString(airportResponse.country_code),
+      coordinates: toCoordinates(airportResponse),
+    };
 
-    return coordinates;
+    airportCoordinatesCache.set(normalizedIata, {
+      airport,
+      expiresAt: now + AIRPORT_CACHE_TTL_MS,
+    });
+
+    return airport;
   })();
 
   airportCoordinatesInFlight.set(normalizedIata, requestPromise);
@@ -163,21 +190,39 @@ export async function GET(request: Request) {
     const arrIata =
       typeof flight.arr_iata === "string" ? flight.arr_iata : undefined;
 
-    const [originCoords, destinationCoords] = await Promise.all([
-      depIata ? queryAirportCoordinates(apiKey, depIata) : Promise.resolve(null),
-      arrIata ? queryAirportCoordinates(apiKey, arrIata) : Promise.resolve(null),
+    const [originAirport, destinationAirport] = await Promise.all([
+      depIata ? queryAirportDetails(apiKey, depIata) : Promise.resolve(null),
+      arrIata ? queryAirportDetails(apiKey, arrIata) : Promise.resolve(null),
     ]);
 
     return NextResponse.json({
       ...flight,
+      dep_name:
+        originAirport?.name ??
+        (typeof flight.dep_name === "string" ? flight.dep_name : undefined),
+      arr_name:
+        destinationAirport?.name ??
+        (typeof flight.arr_name === "string" ? flight.arr_name : undefined),
       route: {
         origin:
-          depIata && originCoords
-            ? { iata: depIata, ...originCoords }
+          depIata && originAirport?.coordinates
+            ? {
+                iata: depIata,
+                name: originAirport.name,
+                city: originAirport.city,
+                countryCode: originAirport.countryCode,
+                ...originAirport.coordinates,
+              }
             : undefined,
         destination:
-          arrIata && destinationCoords
-            ? { iata: arrIata, ...destinationCoords }
+          arrIata && destinationAirport?.coordinates
+            ? {
+                iata: arrIata,
+                name: destinationAirport.name,
+                city: destinationAirport.city,
+                countryCode: destinationAirport.countryCode,
+                ...destinationAirport.coordinates,
+              }
             : undefined,
       },
     });
