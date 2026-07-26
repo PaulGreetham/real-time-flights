@@ -3,7 +3,17 @@
 import { useEffect, useState } from "react";
 import { FlightSearchSidebar } from "@/components/flights/flight-search-sidebar";
 import { FlightResultsPanel } from "@/components/flights/flight-results-panel";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import type { FlightData } from "@/lib/types/flight";
+
+function isExpectedFlightLookupError(error: unknown) {
+  return (
+    error instanceof Error &&
+    /flight not found|not currently active/i.test(error.message)
+  );
+}
 
 export default function Home() {
   const [flightData, setFlightData] = useState<FlightData | null>(null);
@@ -33,7 +43,9 @@ export default function Home() {
       const data = await fetchFlight(normalizedFlightNumber);
       setFlightData(data);
     } catch (err) {
-      console.error(err);
+      if (!isExpectedFlightLookupError(err)) {
+        console.error(err);
+      }
       const message =
         err instanceof Error ? err.message : "Unable to contact server.";
       setError(message);
@@ -55,7 +67,9 @@ export default function Home() {
         setFlightData(latestFlight);
         setError("");
       } catch (err) {
-        console.error("Live update failed:", err);
+        if (!isExpectedFlightLookupError(err)) {
+          console.error("Live update failed:", err);
+        }
       }
     };
 
@@ -78,13 +92,24 @@ export default function Home() {
   }, [activeFlightNumber]);
 
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[350px_1fr]">
+    <SidebarProvider>
       <FlightSearchSidebar onSearch={searchFlight} />
 
-      <FlightResultsPanel
-        flight={flightData}
-        error={error}
-      />
-    </div>
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <p className="text-sm font-medium text-muted-foreground">Flight Tracker</p>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
+        </header>
+
+        <FlightResultsPanel
+          flight={flightData}
+          error={error}
+        />
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
