@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface FlightSearchSidebarProps {
   onSearch: (flightNumber: string) => void
@@ -29,7 +30,10 @@ export function FlightSearchSidebar({ onSearch }: FlightSearchSidebarProps) {
     <aside className="border-r bg-muted/30 p-6 md:p-8">
       <Card className="border-border/60">
         <CardHeader>
-          <CardTitle className="text-xl">Real-Time Flights</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-xl">Real-Time Flights</CardTitle>
+            <ThemeToggle />
+          </div>
           <CardDescription>
             Search by flight number and track live movement.
           </CardDescription>
