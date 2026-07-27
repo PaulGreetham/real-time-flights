@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, Plane, Search } from "lucide-react"
+import { Building2, ChevronRight, Plane, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import type { AirlineOption } from "@/lib/types/flight"
 import {
   Collapsible,
   CollapsibleContent,
@@ -28,15 +29,46 @@ import {
 
 interface FlightSearchSidebarProps {
   onSearch: (flightNumber: string) => void
+  onAirlineSearch: (airlineCode: string) => void
+  airlineOptions: AirlineOption[]
+  isLoadingAirlineOptions: boolean
+  airlineOptionsError: string
 }
 
-export function FlightSearchSidebar({ onSearch }: FlightSearchSidebarProps) {
+export function FlightSearchSidebar({
+  onSearch,
+  onAirlineSearch,
+  airlineOptions,
+  isLoadingAirlineOptions,
+  airlineOptionsError,
+}: FlightSearchSidebarProps) {
   const [flightNumber, setFlightNumber] = useState("")
+  const [airlineQuery, setAirlineQuery] = useState("")
+  const [isAirlineInputFocused, setIsAirlineInputFocused] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!flightNumber.trim()) return
     onSearch(flightNumber.toUpperCase())
+  }
+
+  const normalizedAirlineQuery = airlineQuery.trim().toUpperCase()
+  const isAirlineDropdownOpen =
+    isAirlineInputFocused && normalizedAirlineQuery.length >= 3
+  const filteredAirlines =
+    normalizedAirlineQuery.length >= 3
+      ? airlineOptions
+          .filter((airline) => {
+            const haystack = `${airline.code} ${airline.label}`.toUpperCase()
+            return haystack.includes(normalizedAirlineQuery)
+          })
+          .slice(0, 30)
+      : []
+
+  const handleAirlineOptionSelect = (airline: AirlineOption) => {
+    setAirlineQuery(airline.label.toUpperCase())
+    setIsAirlineInputFocused(false)
+    onAirlineSearch(airline.code)
   }
 
   return (
@@ -107,6 +139,74 @@ export function FlightSearchSidebar({ onSearch }: FlightSearchSidebarProps) {
                       Locate Aircraft
                     </Button>
                   </form>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <Collapsible className="group/collapsible" render={<SidebarMenuItem />}>
+                <CollapsibleTrigger
+                  render={<SidebarMenuButton tooltip="Search by airline" />}
+                >
+                  <Building2 className="size-4" />
+                  <span>Airline search</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<button type="button" />}
+                        className="cursor-default hover:bg-transparent active:bg-transparent"
+                      >
+                        <span>Find Active Airline Flights</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                  <div className="relative flex flex-col gap-3 px-2 pb-1 group-data-[collapsible=icon]:hidden">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="airline-search">Airline (Code or Name)</Label>
+                      <Input
+                        id="airline-search"
+                        type="text"
+                        placeholder="e.g. KLM, EasyJet, British Airways"
+                        className="uppercase"
+                        value={airlineQuery}
+                        onChange={(e) => setAirlineQuery(e.target.value)}
+                        onFocus={() => setIsAirlineInputFocused(true)}
+                        onBlur={() => setIsAirlineInputFocused(false)}
+                      />
+                    </div>
+
+                    {isLoadingAirlineOptions ? (
+                      <p className="text-xs text-muted-foreground">Loading airlines...</p>
+                    ) : null}
+                    {airlineOptionsError ? (
+                      <p className="text-xs text-destructive">{airlineOptionsError}</p>
+                    ) : null}
+
+                    {isAirlineDropdownOpen && normalizedAirlineQuery.length >= 3 ? (
+                      <div className="absolute top-[88px] z-20 max-h-72 w-[calc(100%-1rem)] overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md">
+                        {filteredAirlines.length ? (
+                          filteredAirlines.map((airline) => (
+                            <button
+                              key={`${airline.code}-${airline.label}`}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                handleAirlineOptionSelect(airline)
+                              }}
+                              className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                            >
+                              {airline.label}
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                            No airline matches found.
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
                 </CollapsibleContent>
               </Collapsible>
             </SidebarMenu>
