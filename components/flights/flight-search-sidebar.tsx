@@ -21,9 +21,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
 
@@ -95,7 +92,7 @@ export function FlightSearchSidebar({
         <SidebarGroup>
           <SidebarGroupLabel>Flight Search</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-3">
               <Collapsible
                 defaultOpen
                 className="group/collapsible"
@@ -109,19 +106,9 @@ export function FlightSearchSidebar({
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        render={<button type="button" />}
-                        className="cursor-default hover:bg-transparent active:bg-transparent"
-                      >
-                        <span>Track Live Flight</span>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
                   <form
                     onSubmit={handleSubmit}
-                    className="flex flex-col gap-3 px-2 pb-1 group-data-[collapsible=icon]:hidden"
+                    className="flex flex-col gap-4 px-2 pt-3 pb-2 group-data-[collapsible=icon]:hidden"
                   >
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="flight-search">Flight Number</Label>
@@ -151,17 +138,7 @@ export function FlightSearchSidebar({
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        render={<button type="button" />}
-                        className="cursor-default hover:bg-transparent active:bg-transparent"
-                      >
-                        <span>Find Active Airline Flights</span>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                  <div className="relative flex flex-col gap-3 px-2 pb-1 group-data-[collapsible=icon]:hidden">
+                  <div className="relative flex flex-col gap-4 px-2 pt-3 pb-2 group-data-[collapsible=icon]:hidden">
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="airline-search">Airline (Code or Name)</Label>
                       <Input
