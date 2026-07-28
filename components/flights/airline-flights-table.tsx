@@ -26,6 +26,8 @@ interface AirlineFlightsTableProps {
   onSelectFlight: (flightNumber: string) => void
 }
 
+const PAGE_SIZE = 10
+
 function formatUpdatedTimestamp(updated: string | null | undefined) {
   if (!updated) {
     return "Unknown"
@@ -46,7 +48,7 @@ export function AirlineFlightsTable({
 }: AirlineFlightsTableProps) {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: PAGE_SIZE,
   })
 
   useEffect(() => {
@@ -135,6 +137,11 @@ export function AirlineFlightsTable({
     getPaginationRowModel: getPaginationRowModel(),
   })
 
+  const pageIndex = table.getState().pagination.pageIndex
+  const currentRows = table.getRowModel().rows.length
+  const startRow = flights.length ? pageIndex * PAGE_SIZE + 1 : 0
+  const endRow = flights.length ? startRow + currentRows - 1 : 0
+
   return (
     <div className="space-y-3">
       <div className="rounded-md border">
@@ -181,6 +188,9 @@ export function AirlineFlightsTable({
       </div>
 
       <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm">
+          Showing {startRow}-{endRow} of {flights.length} flights
+        </p>
         <p className="text-muted-foreground text-sm">
           Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount() || 1}
