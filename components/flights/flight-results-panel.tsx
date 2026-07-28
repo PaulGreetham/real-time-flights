@@ -81,7 +81,6 @@ export function FlightResultsPanel({
       {hasCoordinates ? (
         <div>
           <FlightMap
-            key={`${flight.flight_iata ?? flight.flight_icao ?? "flight"}-${mapLat}-${mapLng}-${flight.route?.origin?.iata ?? "no-origin"}-${flight.route?.destination?.iata ?? "no-destination"}`}
             liveLat={mapLat}
             liveLng={mapLng}
             heading={
