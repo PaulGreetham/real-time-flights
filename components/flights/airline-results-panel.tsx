@@ -2,9 +2,8 @@
 
 import type { FlightSummary } from "@/lib/types/flight";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AirlineFlightsTable } from "@/components/flights/airline-flights-table";
 
 interface AirlineResultsPanelProps {
   airlineCode: string;
@@ -59,32 +58,11 @@ export function AirlineResultsPanel({
       </Card>
 
       {flights.length ? (
-        <div className="grid gap-3">
-          {flights.map((flight) => {
-            const displayCode = flight.flight_iata ?? flight.flight_icao ?? "Unknown Flight";
-            const route = `${flight.dep_iata ?? "?"} -> ${flight.arr_iata ?? "?"}`;
-
-            return (
-              <Card key={flight.id}>
-                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{displayCode}</CardTitle>
-                    <CardDescription>{route}</CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{flight.status ?? "Unknown status"}</Badge>
-                    <Button
-                      onClick={() => onSelectFlight(displayCode)}
-                      disabled={displayCode === "Unknown Flight"}
-                    >
-                      Track
-                    </Button>
-                  </div>
-                </CardHeader>
-              </Card>
-            );
-          })}
-        </div>
+        <AirlineFlightsTable
+          airlineCode={airlineCode}
+          flights={flights}
+          onSelectFlight={onSelectFlight}
+        />
       ) : (
         <Card>
           <CardHeader>
