@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Map, {
   Layer,
   Marker,
   NavigationControl,
   Source,
+  type MapRef,
   type GeoJSONSourceSpecification,
 } from "react-map-gl/mapbox";
 import { Plane } from "lucide-react";
 import type { FlightRoutePoint } from "@/lib/types/flight";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface FlightMapProps {
   liveLat: number;
@@ -142,6 +144,9 @@ export function FlightMap({
   origin,
   destination,
 }: FlightMapProps) {
+  const { open, isMobile } = useSidebar();
+  const mapRef = useRef<MapRef | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   const hasRoute = Boolean(origin && destination);
   const iconRotation =
@@ -166,6 +171,52 @@ export function FlightMap({
 
     return snapPointToPolyline({ lng: liveLng, lat: liveLat }, routeCoordinates);
   }, [routeCoordinates, liveLng, liveLat]);
+
+  const resizeMap = useCallback(() => {
+    mapRef.current?.resize();
+  }, []);
+
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    let frameId: number | null = null;
+    const observer = new ResizeObserver(() => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(() => {
+        resizeMap();
+      });
+    });
+
+    observer.observe(container);
+    resizeMap();
+
+    return () => {
+      observer.disconnect();
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+    };
+  }, [resizeMap]);
+
+  useEffect(() => {
+    const immediateFrame = requestAnimationFrame(() => {
+      resizeMap();
+    });
+    const settleDelay = isMobile ? 0 : 220;
+    const timeoutId = window.setTimeout(() => {
+      resizeMap();
+    }, settleDelay);
+
+    return () => {
+      cancelAnimationFrame(immediateFrame);
+      clearTimeout(timeoutId);
+    };
+  }, [open, isMobile, resizeMap]);
 
   if (!mapboxToken) {
     return (
@@ -195,55 +246,59 @@ export function FlightMap({
   return (
     <Card className="overflow-hidden gap-0 py-0">
       <CardContent className="p-0">
-        <Map
-          key={`${flightCode}-${markerPoint.lat.toFixed(4)}-${markerPoint.lng.toFixed(4)}-${origin?.iata ?? "no-origin"}-${destination?.iata ?? "no-destination"}`}
-          mapboxAccessToken={mapboxToken}
-          initialViewState={{
-            latitude: markerPoint.lat,
-            longitude: markerPoint.lng,
-            zoom: 5,
-          }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
-          style={{ width: "100%", height: 360 }}
-        >
-          <NavigationControl position="top-right" />
-          {routeGeojson ? (
-            <Source id="flight-route" {...routeGeojson}>
-              <Layer
-                id="flight-route-line"
-                type="line"
-                paint={{
-                  "line-color": "#2563eb",
-                  "line-width": 3,
-                  "line-opacity": 0.8,
-                }}
+        <div ref={mapContainerRef}>
+          <Map
+            ref={mapRef}
+            reuseMaps
+            mapboxAccessToken={mapboxToken}
+            initialViewState={{
+              latitude: markerPoint.lat,
+              longitude: markerPoint.lng,
+              zoom: 5,
+            }}
+            mapStyle="mapbox://styles/mapbox/streets-v12"
+            style={{ width: "100%", height: 360 }}
+            onLoad={resizeMap}
+          >
+            <NavigationControl position="top-right" />
+            {routeGeojson ? (
+              <Source id="flight-route" {...routeGeojson}>
+                <Layer
+                  id="flight-route-line"
+                  type="line"
+                  paint={{
+                    "line-color": "#2563eb",
+                    "line-width": 3,
+                    "line-opacity": 0.8,
+                  }}
+                />
+              </Source>
+            ) : null}
+
+            {origin ? (
+              <Marker longitude={origin.lng} latitude={origin.lat} anchor="center">
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />
+              </Marker>
+            ) : null}
+
+            {destination ? (
+              <Marker
+                longitude={destination.lng}
+                latitude={destination.lat}
+                anchor="center"
+              >
+                <div className="h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white" />
+              </Marker>
+            ) : null}
+
+            <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
+              <Plane
+                className="h-6 w-6 text-primary drop-shadow"
+                style={{ transform: `rotate(${iconRotation}deg)` }}
               />
-            </Source>
-          ) : null}
-
-          {origin ? (
-            <Marker longitude={origin.lng} latitude={origin.lat} anchor="center">
-              <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />
             </Marker>
-          ) : null}
-
-          {destination ? (
-            <Marker
-              longitude={destination.lng}
-              latitude={destination.lat}
-              anchor="center"
-            >
-              <div className="h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white" />
-            </Marker>
-          ) : null}
-
-          <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
-            <Plane
-              className="h-6 w-6 text-primary drop-shadow"
-              style={{ transform: `rotate(${iconRotation}deg)` }}
-            />
-          </Marker>
-        </Map>
+          </Map>
+        </div>
       </CardContent>
       <CardFooter className="border-t bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
         {hasRoute && origin && destination
