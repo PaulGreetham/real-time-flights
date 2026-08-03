@@ -43,12 +43,13 @@ function readThemeColor(variableName: string, fallback: string) {
     return fallback;
   }
 
-  const probe = new Option();
-  probe.style.color = token;
-  if (!probe.style.color) {
-    return fallback;
+  // Mapbox does not support lab()/oklab()/oklch() strings for paint colors.
+  // Only return formats Mapbox reliably accepts, otherwise use fallback.
+  if (/^(#|rgb\(|rgba\(|hsl\(|hsla\(|[a-zA-Z]+$)/.test(token)) {
+    return token;
   }
-  return probe.style.color;
+
+  return fallback;
 }
 
 function createSmoothRouteCoordinates(
@@ -178,7 +179,9 @@ export function FlightMap({
     resolvedTheme === "dark"
       ? "mapbox://styles/mapbox/dark-v11"
       : "mapbox://styles/mapbox/light-v11";
-  const mapRouteColor = readThemeColor("--map-route", "#2563eb");
+  const mapRouteFallback =
+    resolvedTheme === "dark" ? "#7aa2ff" : "#2563eb";
+  const mapRouteColor = readThemeColor("--map-route", mapRouteFallback);
 
   const routeCoordinates = useMemo(() => {
     if (!origin || !destination) {
