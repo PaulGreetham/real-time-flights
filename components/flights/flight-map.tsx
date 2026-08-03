@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Map, {
   Layer,
   Marker,
@@ -14,6 +14,7 @@ import type { FlightRoutePoint } from "@/lib/types/flight";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useTheme } from "next-themes";
 
 interface FlightMapProps {
   liveLat: number;
@@ -27,6 +28,36 @@ interface FlightMapProps {
 interface LngLatPoint {
   lng: number;
   lat: number;
+}
+
+interface MapThemeColors {
+  route: string;
+}
+
+function readThemeColor(variableName: string, fallback: string) {
+  if (typeof document === "undefined") {
+    return fallback;
+  }
+
+  const token = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+
+  if (!token) {
+    return fallback;
+  }
+
+  const probe = document.createElement("span");
+  probe.style.color = token;
+  if (!probe.style.color) {
+    return fallback;
+  }
+
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+
+  return resolved || fallback;
 }
 
 function createSmoothRouteCoordinates(
@@ -145,12 +176,20 @@ export function FlightMap({
   destination,
 }: FlightMapProps) {
   const { open, isMobile } = useSidebar();
+  const { resolvedTheme } = useTheme();
   const mapRef = useRef<MapRef | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  const [mapColors, setMapColors] = useState<MapThemeColors>({
+    route: "#2563eb",
+  });
   const hasRoute = Boolean(origin && destination);
   const iconRotation =
     typeof heading === "number" && Number.isFinite(heading) ? heading - 45 : -45;
+  const mapStyle =
+    resolvedTheme === "dark"
+      ? "mapbox://styles/mapbox/dark-v11"
+      : "mapbox://styles/mapbox/light-v11";
 
   const routeCoordinates = useMemo(() => {
     if (!origin || !destination) {
@@ -218,6 +257,12 @@ export function FlightMap({
     };
   }, [open, isMobile, resizeMap]);
 
+  useEffect(() => {
+    setMapColors({
+      route: readThemeColor("--map-route", "#2563eb"),
+    });
+  }, [resolvedTheme]);
+
   if (!mapboxToken) {
     return (
       <Alert>
@@ -256,7 +301,7 @@ export function FlightMap({
               longitude: markerPoint.lng,
               zoom: 5,
             }}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle={mapStyle}
             style={{ width: "100%", height: 360 }}
             onLoad={resizeMap}
           >
@@ -267,7 +312,7 @@ export function FlightMap({
                   id="flight-route-line"
                   type="line"
                   paint={{
-                    "line-color": "#2563eb",
+                    "line-color": mapColors.route,
                     "line-width": 3,
                     "line-opacity": 0.8,
                   }}
@@ -277,7 +322,7 @@ export function FlightMap({
 
             {origin ? (
               <Marker longitude={origin.lng} latitude={origin.lat} anchor="center">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />
+                <div className="h-2.5 w-2.5 rounded-full bg-map-origin ring-2 ring-map-marker-ring" />
               </Marker>
             ) : null}
 
@@ -287,13 +332,13 @@ export function FlightMap({
                 latitude={destination.lat}
                 anchor="center"
               >
-                <div className="h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white" />
+                <div className="h-2.5 w-2.5 rounded-full bg-map-destination ring-2 ring-map-marker-ring" />
               </Marker>
             ) : null}
 
             <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
               <Plane
-                className="h-6 w-6 text-primary drop-shadow"
+                className="h-6 w-6 text-map-aircraft drop-shadow"
                 style={{ transform: `rotate(${iconRotation}deg)` }}
               />
             </Marker>
