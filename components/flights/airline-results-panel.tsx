@@ -25,7 +25,7 @@ export function AirlineResultsPanel({
   if (isLoading) {
     return (
       <main className="p-6 md:p-8">
-        <Card className="max-w-3xl">
+        <Card className="max-w-3xl border-primary/20">
           <CardHeader>
             <CardTitle>Loading airline flights</CardTitle>
             <CardDescription>Fetching active flights for {airlineCode}.</CardDescription>
@@ -48,7 +48,7 @@ export function AirlineResultsPanel({
 
   return (
     <main className="space-y-4 p-6 md:p-8">
-      <Card>
+      <Card className="border-primary/25">
         <CardHeader>
           <CardTitle className="text-2xl">Airline search: {airlineCode}</CardTitle>
           <CardDescription>
@@ -64,7 +64,7 @@ export function AirlineResultsPanel({
           onSelectFlight={onSelectFlight}
         />
       ) : (
-        <Card>
+        <Card className="border-accent/35 bg-accent/10">
           <CardHeader>
             <CardTitle>No matching flights</CardTitle>
             <CardDescription>

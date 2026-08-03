@@ -14,6 +14,7 @@ import type { FlightRoutePoint } from "@/lib/types/flight";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useTheme } from "next-themes";
 
 interface FlightMapProps {
   liveLat: number;
@@ -27,6 +28,28 @@ interface FlightMapProps {
 interface LngLatPoint {
   lng: number;
   lat: number;
+}
+
+function readThemeColor(variableName: string, fallback: string) {
+  if (typeof document === "undefined") {
+    return fallback;
+  }
+
+  const token = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+
+  if (!token) {
+    return fallback;
+  }
+
+  // Mapbox does not support lab()/oklab()/oklch() strings for paint colors.
+  // Only return formats Mapbox reliably accepts, otherwise use fallback.
+  if (/^(#|rgb\(|rgba\(|hsl\(|hsla\(|[a-zA-Z]+$)/.test(token)) {
+    return token;
+  }
+
+  return fallback;
 }
 
 function createSmoothRouteCoordinates(
@@ -145,12 +168,20 @@ export function FlightMap({
   destination,
 }: FlightMapProps) {
   const { open, isMobile } = useSidebar();
+  const { resolvedTheme } = useTheme();
   const mapRef = useRef<MapRef | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   const hasRoute = Boolean(origin && destination);
   const iconRotation =
     typeof heading === "number" && Number.isFinite(heading) ? heading - 45 : -45;
+  const mapStyle =
+    resolvedTheme === "dark"
+      ? "mapbox://styles/mapbox/dark-v11"
+      : "mapbox://styles/mapbox/light-v11";
+  const mapRouteFallback =
+    resolvedTheme === "dark" ? "#7aa2ff" : "#2563eb";
+  const mapRouteColor = readThemeColor("--map-route", mapRouteFallback);
 
   const routeCoordinates = useMemo(() => {
     if (!origin || !destination) {
@@ -256,7 +287,7 @@ export function FlightMap({
               longitude: markerPoint.lng,
               zoom: 5,
             }}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle={mapStyle}
             style={{ width: "100%", height: 360 }}
             onLoad={resizeMap}
           >
@@ -267,7 +298,7 @@ export function FlightMap({
                   id="flight-route-line"
                   type="line"
                   paint={{
-                    "line-color": "#2563eb",
+                    "line-color": mapRouteColor,
                     "line-width": 3,
                     "line-opacity": 0.8,
                   }}
@@ -277,7 +308,7 @@ export function FlightMap({
 
             {origin ? (
               <Marker longitude={origin.lng} latitude={origin.lat} anchor="center">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />
+                <div className="h-2.5 w-2.5 rounded-full bg-map-origin ring-2 ring-map-marker-ring" />
               </Marker>
             ) : null}
 
@@ -287,13 +318,14 @@ export function FlightMap({
                 latitude={destination.lat}
                 anchor="center"
               >
-                <div className="h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white" />
+                <div className="h-2.5 w-2.5 rounded-full bg-map-destination ring-2 ring-map-marker-ring" />
               </Marker>
             ) : null}
 
             <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
               <Plane
-                className="h-6 w-6 text-primary drop-shadow"
+                className="h-6 w-6 fill-map-aircraft text-map-aircraft drop-shadow"
+                strokeWidth={1.6}
                 style={{ transform: `rotate(${iconRotation}deg)` }}
               />
             </Marker>
