@@ -324,7 +324,8 @@ export function FlightMap({
 
             <Marker longitude={markerPoint.lng} latitude={markerPoint.lat} anchor="center">
               <Plane
-                className="h-6 w-6 text-map-aircraft drop-shadow"
+                className="h-6 w-6 fill-map-aircraft text-map-aircraft drop-shadow"
+                strokeWidth={1.6}
                 style={{ transform: `rotate(${iconRotation}deg)` }}
               />
             </Marker>
