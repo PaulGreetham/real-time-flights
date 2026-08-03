@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Map, {
   Layer,
   Marker,
@@ -30,10 +30,6 @@ interface LngLatPoint {
   lat: number;
 }
 
-interface MapThemeColors {
-  route: string;
-}
-
 function readThemeColor(variableName: string, fallback: string) {
   if (typeof document === "undefined") {
     return fallback;
@@ -47,17 +43,12 @@ function readThemeColor(variableName: string, fallback: string) {
     return fallback;
   }
 
-  const probe = document.createElement("span");
+  const probe = new Option();
   probe.style.color = token;
   if (!probe.style.color) {
     return fallback;
   }
-
-  document.body.appendChild(probe);
-  const resolved = getComputedStyle(probe).color;
-  probe.remove();
-
-  return resolved || fallback;
+  return probe.style.color;
 }
 
 function createSmoothRouteCoordinates(
@@ -180,9 +171,6 @@ export function FlightMap({
   const mapRef = useRef<MapRef | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-  const [mapColors, setMapColors] = useState<MapThemeColors>({
-    route: "#2563eb",
-  });
   const hasRoute = Boolean(origin && destination);
   const iconRotation =
     typeof heading === "number" && Number.isFinite(heading) ? heading - 45 : -45;
@@ -190,6 +178,7 @@ export function FlightMap({
     resolvedTheme === "dark"
       ? "mapbox://styles/mapbox/dark-v11"
       : "mapbox://styles/mapbox/light-v11";
+  const mapRouteColor = readThemeColor("--map-route", "#2563eb");
 
   const routeCoordinates = useMemo(() => {
     if (!origin || !destination) {
@@ -257,12 +246,6 @@ export function FlightMap({
     };
   }, [open, isMobile, resizeMap]);
 
-  useEffect(() => {
-    setMapColors({
-      route: readThemeColor("--map-route", "#2563eb"),
-    });
-  }, [resolvedTheme]);
-
   if (!mapboxToken) {
     return (
       <Alert>
@@ -312,7 +295,7 @@ export function FlightMap({
                   id="flight-route-line"
                   type="line"
                   paint={{
-                    "line-color": mapColors.route,
+                    "line-color": mapRouteColor,
                     "line-width": 3,
                     "line-opacity": 0.8,
                   }}

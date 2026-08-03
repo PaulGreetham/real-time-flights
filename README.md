@@ -56,3 +56,25 @@ The experience combines live telemetry, route context, and map visualization in 
 - Server-side API key usage for external calls
 - In-memory airport coordinate cache and in-flight request deduplication
 - Client polling strategy optimized to refresh only when the tab is visible
+
+## Color system
+
+The app uses a semantic token system in [`app/globals.css`](app/globals.css) with `oklch` values for both `:root` (light) and `.dark` (dark).
+
+- Core semantic tokens: `--background`, `--foreground`, `--primary`, `--secondary`, `--accent`, `--muted`, `--destructive`, `--border`, `--input`, `--ring`.
+- Extended tokens for this app: `--overlay`, `--map-route`, `--map-origin`, `--map-destination`, `--map-marker-ring`, `--map-aircraft`, and `--chart-1..5`.
+- Tokens are bridged to Tailwind utilities via `@theme inline`, so components should use semantic classes (for example `bg-primary`, `text-muted-foreground`, `border-border`) instead of hardcoded colors.
+
+### Updating the palette
+
+1. Change `oklch` values under both `:root` and `.dark` in [`app/globals.css`](app/globals.css).
+2. Keep usage semantic in components (`bg-*`, `text-*`, `border-*` token classes) and avoid raw hex or fixed palette classes unless required by a third-party API.
+3. For map overlays, update map tokens in CSS and consume them in [`components/flights/flight-map.tsx`](components/flights/flight-map.tsx).
+
+## Visual QA checklist (light + dark)
+
+- Toggle theme and verify cards, sidebar, buttons, inputs, alerts, and badges all preserve readable contrast.
+- Verify destructive states are legible (text, border, and focus ring) in both themes.
+- Confirm map base style switches with theme (`light-v11` in light mode, `dark-v11` in dark mode).
+- Confirm route line, origin marker, destination marker, and aircraft icon remain visible on both map styles.
+- Check hover/focus states on dropdown options, table actions, and pagination controls.
