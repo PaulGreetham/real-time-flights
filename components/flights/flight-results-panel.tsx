@@ -64,7 +64,7 @@ export function FlightResultsPanel({
 
   return (
     <main className="space-y-6 p-6 md:p-8">
-      <Card>
+      <Card className="border-primary/25 bg-card">
         <CardHeader>
           <CardTitle className="text-3xl">
             {flight.flight_iata ?? flight.flight_icao ?? "Unknown Flight"}
@@ -103,33 +103,33 @@ export function FlightResultsPanel({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+        <div className="space-y-1 rounded-md border border-primary/25 bg-primary/10 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Departure</p>
           <p className="text-base font-semibold">{flight.dep_iata ?? "Unknown"}</p>
           {departureName ? (
             <p className="text-sm text-muted-foreground">{departureName}</p>
           ) : null}
         </div>
-        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+        <div className="space-y-1 rounded-md border border-accent/35 bg-accent/10 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Arrival</p>
           <p className="text-base font-semibold">{flight.arr_iata ?? "Unknown"}</p>
           {arrivalName ? (
             <p className="text-sm text-muted-foreground">{arrivalName}</p>
           ) : null}
         </div>
-        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+        <div className="space-y-1 rounded-md border bg-muted/30 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Latitude</p>
           <p className="text-base font-semibold tabular-nums">{flight.lat}</p>
         </div>
-        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+        <div className="space-y-1 rounded-md border bg-muted/30 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Longitude</p>
           <p className="text-base font-semibold tabular-nums">{flight.lng}</p>
         </div>
-        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+        <div className="space-y-1 rounded-md border bg-muted/30 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Altitude</p>
           <p className="text-base font-semibold tabular-nums">{flight.alt}</p>
         </div>
-        <div className="space-y-1 rounded-md border bg-muted/20 px-4 py-3">
+        <div className="space-y-1 rounded-md border bg-muted/30 px-4 py-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Speed</p>
           <p className="text-base font-semibold tabular-nums">{flight.speed}</p>
         </div>

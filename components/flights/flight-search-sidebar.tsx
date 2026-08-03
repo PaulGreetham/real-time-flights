@@ -78,7 +78,7 @@ export function FlightSearchSidebar({
               tooltip="Real-Time Flights"
               className="group-data-[collapsible=icon]:justify-center"
             >
-              <Plane className="size-4" />
+              <Plane className="size-4 text-primary" />
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-semibold">Real-Time Flights</span>
                 <span className="truncate text-xs text-muted-foreground">Live tracking</span>
@@ -101,7 +101,7 @@ export function FlightSearchSidebar({
                 <CollapsibleTrigger
                   render={<SidebarMenuButton tooltip="Search by flight number" />}
                 >
-                  <Search className="size-4" />
+                  <Search className="size-4 text-primary" />
                   <span>Search Flight</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
                 </CollapsibleTrigger>
@@ -133,7 +133,7 @@ export function FlightSearchSidebar({
                 <CollapsibleTrigger
                   render={<SidebarMenuButton tooltip="Search by airline" />}
                 >
-                  <Building2 className="size-4" />
+                  <Building2 className="size-4 text-chart-2" />
                   <span>Airline search</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
                 </CollapsibleTrigger>
@@ -171,7 +171,7 @@ export function FlightSearchSidebar({
                                 e.preventDefault()
                                 handleAirlineOptionSelect(airline)
                               }}
-                              className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                              className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
                             >
                               {airline.label}
                             </button>
