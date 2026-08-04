@@ -20,6 +20,9 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Real-Time Flights",
   description: "Track real-time flight movement and route details.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
