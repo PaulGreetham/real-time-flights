@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Activity, Clock3, Globe2, ShieldCheck, Sparkles, Waves } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Activity, Clock3, Globe2, Sparkles, Waves } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,27 +40,7 @@ export default function LandingPage() {
         className="pointer-events-none absolute inset-x-0 top-[-18rem] -z-10 mx-auto h-[32rem] max-w-[72rem] rounded-full bg-primary/20 blur-3xl"
       />
 
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 pt-6 sm:px-8 lg:px-12">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg border border-border/70 bg-card px-3 py-1.5 text-sm font-semibold text-foreground">
-            Real-Time Flights
-          </div>
-          <Badge variant="secondary" className="hidden sm:inline-flex">
-            Operational Dashboard
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/tracker"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            Open Tracker
-          </Link>
-          <ThemeToggle />
-        </div>
-      </header>
-
-      <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:px-12 lg:pt-20">
+      <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:px-12 lg:pt-24">
         <div className="space-y-7">
           <Badge className="bg-primary/15 text-primary">Modern flight intelligence</Badge>
           <div className="space-y-4">
@@ -121,33 +100,9 @@ export default function LandingPage() {
         </Card>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-6 pb-16 sm:px-8 lg:px-12 lg:pb-24">
-        <Card className="border border-border/70 bg-gradient-to-r from-card via-card to-primary/10">
-          <CardContent className="flex flex-col gap-6 py-8 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-2">
-              <p className="text-xl font-medium text-foreground sm:text-2xl">
-                Ready to monitor flights live?
-              </p>
-              <p className="text-sm text-muted-foreground sm:text-base">
-                Move from overview to actionable route data with one click.
-              </p>
-            </div>
-            <Link
-              href="/tracker"
-              className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
-            >
-              Launch Dashboard
-            </Link>
-          </CardContent>
-        </Card>
-      </section>
-
       <footer className="mx-auto flex w-full max-w-6xl flex-col gap-2 border-t border-border/70 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
         <p>Real-Time Flights</p>
-        <p className="inline-flex items-center gap-2">
-          <ShieldCheck className="size-4" />
-          Built for modern operations workflows
-        </p>
+        <p>Built for modern operations workflows</p>
       </footer>
     </main>
   );
