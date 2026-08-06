@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Activity, Clock3, Globe2, Sparkles, Waves } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,7 +103,10 @@ export default function LandingPage() {
 
       <footer className="mx-auto flex w-full max-w-6xl flex-col gap-2 border-t border-border/70 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
         <p>Real-Time Flights</p>
-        <p>Built for modern operations workflows</p>
+        <div className="flex items-center gap-3">
+          <p>Built for modern operations workflows</p>
+          <ThemeToggle />
+        </div>
       </footer>
     </main>
   );
