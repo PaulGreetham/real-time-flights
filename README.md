@@ -1,8 +1,13 @@
 # Real-Time Flights
 
-Real-Time Flights is a flight-tracking web app focused on a single job: search for a flight and immediately understand where that aircraft is, where it is headed, and how it is moving right now.
+Real-Time Flights is a flight-tracking web app with a landing page and an operational dashboard for live flight analysis.
 
-The experience combines live telemetry, route context, and map visualization in one screen so users can move from "is this flight active?" to "where is it relative to its route?" without switching tools.
+The experience combines live telemetry, route context, and map visualization so users can move from "is this flight active?" to "where is it relative to its route?" without switching tools.
+
+## Routes
+
+- `/`: Marketing-style landing page with product highlights and call-to-actions.
+- `/tracker`: Flight operations dashboard for searching and monitoring live flights.
 
 ## What the app does
 
