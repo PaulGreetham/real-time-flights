@@ -3,7 +3,6 @@ import { Activity, Clock3, Globe2, Sparkles, Waves } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const highlights = [
@@ -71,15 +70,17 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <Card className="border border-border/70 bg-card/80 shadow-sm backdrop-blur">
-          <CardHeader className="space-y-3">
+        <div className="space-y-4">
+          <div className="space-y-3">
             <Badge variant="secondary" className="w-fit">
               <Sparkles className="size-3.5" />
               Why teams use it
             </Badge>
-            <CardTitle className="text-xl">Designed for clarity under time pressure</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pb-6">
+            <h2 className="text-xl font-medium text-foreground">
+              Designed for clarity under time pressure
+            </h2>
+          </div>
+          <div className="space-y-4">
             {highlights.map((item) => {
               const Icon = item.icon;
               return (
@@ -97,8 +98,8 @@ export default function LandingPage() {
                 </div>
               );
             })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </section>
 
       <footer className="mx-auto flex w-full max-w-6xl flex-col gap-2 border-t border-border/70 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
