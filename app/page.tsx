@@ -1,329 +1,154 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import { AirlineResultsPanel } from "@/components/flights/airline-results-panel";
-import { FlightSearchSidebar } from "@/components/flights/flight-search-sidebar";
-import { FlightResultsPanel } from "@/components/flights/flight-results-panel";
+import Link from "next/link";
+import { Activity, Clock3, Globe2, ShieldCheck, Sparkles, Waves } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import type {
-  AirlineFlightsResponse,
-  AirlineOption,
-  AirlinesResponse,
-  FlightData,
-  FlightSummary,
-} from "@/lib/types/flight";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-const CLIENT_AIRLINE_CACHE_TTL_MS = 60_000;
-const CLIENT_AIRLINES_CACHE_TTL_MS = 1000 * 60 * 60 * 24;
+const highlights = [
+  {
+    title: "Live Aircraft Positioning",
+    description:
+      "Watch current aircraft coordinates refresh in near real-time with route context.",
+    icon: Activity,
+  },
+  {
+    title: "Airline-Level Discovery",
+    description:
+      "Search by airline to inspect active flights and jump directly into specific routes.",
+    icon: Globe2,
+  },
+  {
+    title: "Dynamic Map Visuals",
+    description:
+      "Follow smooth route curves, heading-aware markers, and theme-aware map styling.",
+    icon: Waves,
+  },
+];
 
-type AirlineClientCacheEntry = {
-  response: AirlineFlightsResponse;
-  expiresAt: number;
-};
-type AirlineOptionsClientCacheEntry = {
-  airlines: AirlineOption[];
-  expiresAt: number;
-};
+const trustSignals = [
+  "Fast API-backed lookups",
+  "Built-in response caching",
+  "Dark and light mode support",
+];
 
-function isExpectedFlightLookupError(error: unknown) {
+export default function LandingPage() {
   return (
-    error instanceof Error &&
-    /flight not found|not currently active/i.test(error.message)
-  );
-}
-
-export default function Home() {
-  const [flightData, setFlightData] = useState<FlightData | null>(null);
-  const [flightError, setFlightError] = useState("");
-  const [activeFlightNumber, setActiveFlightNumber] = useState("");
-  const [view, setView] = useState<"flight" | "airline">("flight");
-
-  const [activeAirlineCode, setActiveAirlineCode] = useState("");
-  const [airlineFlights, setAirlineFlights] = useState<FlightSummary[]>([]);
-  const [airlineError, setAirlineError] = useState("");
-  const [isLoadingAirlineFlights, setIsLoadingAirlineFlights] = useState(false);
-  const [airlineOptions, setAirlineOptions] = useState<AirlineOption[]>([]);
-  const [isLoadingAirlineOptions, setIsLoadingAirlineOptions] = useState(false);
-  const [airlineOptionsError, setAirlineOptionsError] = useState("");
-
-  const airlineFlightsCache = useRef<Map<string, AirlineClientCacheEntry>>(new Map());
-  const airlineFlightsInFlight = useRef<Map<string, Promise<AirlineFlightsResponse>>>(
-    new Map()
-  );
-  const airlineOptionsCache = useRef<AirlineOptionsClientCacheEntry | null>(null);
-  const airlineOptionsInFlight = useRef<Promise<AirlineOption[]> | null>(null);
-
-  const fetchFlight = async (flightNumber: string): Promise<FlightData | null> => {
-    const res = await fetch(
-      `/api/flight?flightNumber=${encodeURIComponent(flightNumber)}`
-    );
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data?.error ?? "Unable to fetch flight");
-    }
-
-    return data as FlightData;
-  };
-
-  const searchFlight = async (flightNumber: string) => {
-    const normalizedFlightNumber = flightNumber.trim().toUpperCase();
-    setFlightError("");
-    setFlightData(null);
-    setActiveFlightNumber(normalizedFlightNumber);
-    setView("flight");
-
-    try {
-      const data = await fetchFlight(normalizedFlightNumber);
-      setFlightData(data);
-    } catch (err) {
-      if (!isExpectedFlightLookupError(err)) {
-        console.error(err);
-      }
-      const message =
-        err instanceof Error ? err.message : "Unable to contact server.";
-      setFlightError(message);
-    }
-  };
-
-  const fetchAirlineFlights = async (
-    airlineCode: string
-  ): Promise<AirlineFlightsResponse> => {
-    const normalizedCode = airlineCode.trim().toUpperCase();
-    const now = Date.now();
-    const cacheKey = `airline:${normalizedCode}`;
-    const cached = airlineFlightsCache.current.get(cacheKey);
-
-    if (cached && cached.expiresAt > now) {
-      return { ...cached.response, fromCache: true };
-    }
-
-    const pending = airlineFlightsInFlight.current.get(cacheKey);
-    if (pending) {
-      return pending;
-    }
-
-    const requestPromise = (async () => {
-      const res = await fetch(
-        `/api/flights?airline=${encodeURIComponent(normalizedCode)}`
-      );
-      const data = (await res.json()) as AirlineFlightsResponse | { error?: string };
-
-      if (!res.ok) {
-        throw new Error(
-          "error" in data
-            ? data.error ?? "Unable to fetch airline flights"
-            : "Unable to fetch airline flights"
-        );
-      }
-
-      const response =
-        "flights" in data
-          ? data
-          : {
-              airlineCode: normalizedCode,
-              flights: [],
-              fetchedAt: new Date().toISOString(),
-              fromCache: false,
-            };
-
-      airlineFlightsCache.current.set(cacheKey, {
-        response: { ...response, fromCache: false },
-        expiresAt: Date.now() + CLIENT_AIRLINE_CACHE_TTL_MS,
-      });
-
-      return response;
-    })();
-
-    airlineFlightsInFlight.current.set(cacheKey, requestPromise);
-    try {
-      return await requestPromise;
-    } finally {
-      airlineFlightsInFlight.current.delete(cacheKey);
-    }
-  };
-
-  const fetchAirlineOptions = async (): Promise<AirlineOption[]> => {
-    const cached = airlineOptionsCache.current;
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.airlines;
-    }
-
-    if (airlineOptionsInFlight.current) {
-      return airlineOptionsInFlight.current;
-    }
-
-    const requestPromise = (async () => {
-      const res = await fetch("/api/airlines");
-      const data = (await res.json()) as AirlinesResponse | { error?: string };
-
-      if (!res.ok) {
-        throw new Error(
-          "error" in data ? data.error ?? "Unable to fetch airlines" : "Unable to fetch airlines"
-        );
-      }
-
-      const airlines = "airlines" in data ? data.airlines : [];
-      airlineOptionsCache.current = {
-        airlines,
-        expiresAt: Date.now() + CLIENT_AIRLINES_CACHE_TTL_MS,
-      };
-
-      return airlines;
-    })();
-
-    airlineOptionsInFlight.current = requestPromise;
-    try {
-      return await requestPromise;
-    } finally {
-      airlineOptionsInFlight.current = null;
-    }
-  };
-
-  const searchAirlineFlights = async (airlineCode: string) => {
-    const normalizedCode = airlineCode.trim().toUpperCase();
-    if (!normalizedCode) {
-      return;
-    }
-
-    // For repeated searches on the same code, reuse in-memory flights and avoid any request.
-    if (normalizedCode === activeAirlineCode && airlineFlights.length > 0) {
-      setView("airline");
-      setAirlineError("");
-      return;
-    }
-
-    setView("airline");
-    setFlightData(null);
-    setActiveFlightNumber("");
-    setFlightError("");
-    setAirlineError("");
-    setActiveAirlineCode(normalizedCode);
-    setIsLoadingAirlineFlights(true);
-
-    try {
-      const data = await fetchAirlineFlights(normalizedCode);
-      setAirlineFlights(data.flights);
-    } catch (err) {
-      setAirlineFlights([]);
-      setAirlineError(
-        err instanceof Error ? err.message : "Unable to fetch airline flights."
-      );
-    } finally {
-      setIsLoadingAirlineFlights(false);
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAirlineOptions = async () => {
-      setIsLoadingAirlineOptions(true);
-      setAirlineOptionsError("");
-
-      try {
-        const options = await fetchAirlineOptions();
-        if (!cancelled) {
-          setAirlineOptions(options);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setAirlineOptions([]);
-          setAirlineOptionsError(
-            err instanceof Error ? err.message : "Unable to fetch airlines"
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoadingAirlineOptions(false);
-        }
-      }
-    };
-
-    void loadAirlineOptions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!activeFlightNumber) {
-      return;
-    }
-
-    const refreshLiveFlight = async () => {
-      if (document.hidden) {
-        return;
-      }
-
-      try {
-        const latestFlight = await fetchFlight(activeFlightNumber);
-        setFlightData(latestFlight);
-        setFlightError("");
-      } catch (err) {
-        if (!isExpectedFlightLookupError(err)) {
-          console.error("Live update failed:", err);
-        }
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        void refreshLiveFlight();
-      }
-    };
-
-    const interval = setInterval(() => {
-      void refreshLiveFlight();
-    }, 60_000);
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [activeFlightNumber]);
-
-  return (
-    <SidebarProvider>
-      <FlightSearchSidebar
-        onSearch={searchFlight}
-        onAirlineSearch={searchAirlineFlights}
-        airlineOptions={airlineOptions}
-        isLoadingAirlineOptions={isLoadingAirlineOptions}
-        airlineOptionsError={airlineOptionsError}
+    <main className="relative min-h-screen overflow-x-clip bg-background">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-[-18rem] -z-10 mx-auto h-[32rem] max-w-[72rem] rounded-full bg-primary/20 blur-3xl"
       />
 
-      <SidebarInset>
-      <header className="flex h-14 shrink-0 items-center border-b px-4">
-          <SidebarTrigger className="-ml-4 size-14 rounded-none" />
-          <Separator orientation="vertical" className="mr-4" />
-          <p className="text-sm font-medium text-muted-foreground">Flight Tracker</p>
-          <div className="ml-auto">
-            <ThemeToggle />
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 pt-6 sm:px-8 lg:px-12">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-1.5 text-sm font-semibold text-foreground">
+            Real-Time Flights
           </div>
-        </header>
+          <Badge variant="secondary" className="hidden sm:inline-flex">
+            Operational Dashboard
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/tracker"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            Open Tracker
+          </Link>
+          <ThemeToggle />
+        </div>
+      </header>
 
-        {view === "airline" && !flightData ? (
-          <AirlineResultsPanel
-            airlineCode={activeAirlineCode}
-            flights={airlineFlights}
-            totalFlights={airlineFlights.length}
-            isLoading={isLoadingAirlineFlights}
-            error={airlineError}
-            onSelectFlight={searchFlight}
-          />
-        ) : (
-          <FlightResultsPanel
-            flight={flightData}
-            error={flightError}
-          />
-        )}
-      </SidebarInset>
-    </SidebarProvider>
+      <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:px-12 lg:pt-20">
+        <div className="space-y-7">
+          <Badge className="bg-primary/15 text-primary">Modern flight intelligence</Badge>
+          <div className="space-y-4">
+            <h1 className="max-w-xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              Track active flights with a clean, real-time operations view.
+            </h1>
+            <p className="max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+              A focused SaaS-style cockpit for monitoring a single flight or exploring all
+              active routes for an airline in seconds.
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <Link href="/tracker" className={cn(buttonVariants({ size: "lg" }))}>
+              Start Tracking
+            </Link>
+            <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock3 className="size-4" />
+              Refreshes live positions every minute
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {trustSignals.map((signal) => (
+              <Badge key={signal} variant="outline" className="rounded-full px-3 py-1">
+                {signal}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <Card className="border border-border/70 bg-card/80 shadow-sm backdrop-blur">
+          <CardHeader className="space-y-3">
+            <Badge variant="secondary" className="w-fit">
+              <Sparkles className="size-3.5" />
+              Why teams use it
+            </Badge>
+            <CardTitle className="text-xl">Designed for clarity under time pressure</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pb-6">
+            {highlights.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-xl border border-border/70 bg-background/70 p-4"
+                >
+                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Icon className="size-4 text-primary" />
+                    {item.title}
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {item.description}
+                  </p>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-6 pb-16 sm:px-8 lg:px-12 lg:pb-24">
+        <Card className="border border-border/70 bg-gradient-to-r from-card via-card to-primary/10">
+          <CardContent className="flex flex-col gap-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <p className="text-xl font-medium text-foreground sm:text-2xl">
+                Ready to monitor flights live?
+              </p>
+              <p className="text-sm text-muted-foreground sm:text-base">
+                Move from overview to actionable route data with one click.
+              </p>
+            </div>
+            <Link
+              href="/tracker"
+              className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
+            >
+              Launch Dashboard
+            </Link>
+          </CardContent>
+        </Card>
+      </section>
+
+      <footer className="mx-auto flex w-full max-w-6xl flex-col gap-2 border-t border-border/70 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+        <p>Real-Time Flights</p>
+        <p className="inline-flex items-center gap-2">
+          <ShieldCheck className="size-4" />
+          Built for modern operations workflows
+        </p>
+      </footer>
+    </main>
   );
 }
