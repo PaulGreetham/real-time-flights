@@ -1,13 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  ArrowUpDown,
-} from "lucide-react"
+import { ArrowUpDown } from "lucide-react"
 import {
   type ColumnDef,
   flexRender,
@@ -21,6 +15,7 @@ import type { FlightSummary } from "@/lib/types/flight"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { TablePagination } from "@/components/ui/table-pagination"
 import {
   Table,
   TableBody,
@@ -201,11 +196,8 @@ export function AirlineFlightsTable({
     getSortedRowModel: getSortedRowModel(),
   })
 
-  const pageIndex = table.getState().pagination.pageIndex
-  const pageCount = table.getPageCount() || 1
-  const currentRows = table.getRowModel().rows.length
-  const startRow = flights.length ? pageIndex * PAGE_SIZE + 1 : 0
-  const endRow = flights.length ? startRow + currentRows - 1 : 0
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageCount = table.getPageCount() || 1;
 
   return (
     <div className="space-y-3">
@@ -255,56 +247,18 @@ export function AirlineFlightsTable({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-md border px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <span>Rows per page: {PAGE_SIZE}</span>
-          <span className="hidden sm:inline">|</span>
-          <span>
-            Showing {startRow}-{endRow} of {flights.length}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
-          <p className="text-muted-foreground text-sm">
-            Page {pageIndex + 1} of {pageCount}
-          </p>
-          <Button
-            variant="outline"
-            className="hidden size-8 p-0 sm:inline-flex"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="Go to first page"
-          >
-            <ChevronsLeft className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="size-8 p-0"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="Go to previous page"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="size-8 p-0"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            aria-label="Go to next page"
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="hidden size-8 p-0 sm:inline-flex"
-            onClick={() => table.setPageIndex(pageCount - 1)}
-            disabled={!table.getCanNextPage()}
-            aria-label="Go to last page"
-          >
-            <ChevronsRight className="size-4" />
-          </Button>
-        </div>
-      </div>
+      <TablePagination
+        pageIndex={pageIndex}
+        pageCount={pageCount}
+        pageSize={PAGE_SIZE}
+        totalItems={flights.length}
+        canPreviousPage={table.getCanPreviousPage()}
+        canNextPage={table.getCanNextPage()}
+        onPreviousPage={() => table.previousPage()}
+        onNextPage={() => table.nextPage()}
+        onFirstPage={() => table.setPageIndex(0)}
+        onLastPage={() => table.setPageIndex(pageCount - 1)}
+      />
     </div>
-  )
+  );
 }
